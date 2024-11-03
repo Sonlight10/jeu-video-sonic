@@ -1,85 +1,72 @@
+from player import Player
+from monster import Monster
 import pygame
-from game import Game
-import time
-pygame.init()
 
-icon_img = pygame.image.load('assets/logo.png')  # Créer un logo dans la barre des tâches pour notre jeu
-pygame.display.set_icon(icon_img)
 
-pygame.mixer.music.load('green-hill-zone.wav')
-pygame.mixer.music.play()
+# creer une seconde classe qui va representer notre jeu
+class Game :
+    
+    def __init__(self) :
+        # definir si notre jeu a commencé ou non
+        self.is_playing = False
+        # generer notre joueur
+        self.all_players = pygame.sprite.Group()
+        self.player = Player(self)
+        self.all_players.add(self.player)
+        # groupe de monstre
+        self.all_monsters  = pygame.sprite.Group()
+        self.pressed = {}
+        self.spawn_monster()
+        self.spawn_monster()
 
-# Générer la fenêtre de notre jeu
-pygame.display.set_caption("S0NIC THE HEDGEHOG")
-screen = pygame.display.set_mode((1280, 720))
+    def start(self):
+        self.is_playing = True
+        self.spawn_monster()
+        self.spawn_monster()
 
-# Importer de charger l'arrière-plan de notre jeu
-background = pygame.image.load('assets/sonic_1__green_hill__present__background_by_mtbvcdremixes_df1j81j-fullview.jpg')
+    def game_over(self):
+        # remettre le jeu à neuf, retirer les monstres, remettre le joueur à 1 de vie, jeu en attente
+        self.all_monsters = pygame.sprite.Group()
+        self.player.health = self.player.max_health
+        self.is_playing = False # Jeu terminé
+        print('Game Over')
 
-FPS = 60
-clock = pygame.time.Clock()
+    def update(self, screen):
 
-# Charger notre jeu
-game = Game()
+        # Appliquer l'image de mon joueur
+        screen.blit(self.player.image, self.player.rect)
 
-running = True
+        # actualiser l'animation du joueur
+        self.player.update_animation()
 
-# Boucle tant que cette condition est vraie
-while running:
+        # Récupérer les projectiles du joueur
+        for projectile in self.player.all_projectiles:
+            projectile.move()
 
-    # Appliquer l'arrière-plan de notre jeu
-    screen.blit(background, (0, 0))
+        # Récupérer les monstres de notre jeu
+        for monster in self.all_monsters:
+            monster.forward()
+            monster.update_animation()
 
-    # Appliquer l'image de mon joueur
-    screen.blit(game.player.image, game.player.rect)
+        # Appliquer l'ensemble des images de mon groupe de projectiles
+        self.player.all_projectiles.draw(screen)
 
-    # Récupérer les projectiles du joueur
-    for projectile in game.player.all_projectiles:
-        projectile.move()
+        # Appliquer l'ensemble des images de mon groupe de monstres
+        self.all_monsters.draw(screen)
 
-    # Récupérer les monstres de notre jeu
-    for monster in game.all_monsters:
-        monster.forward()
+        # Vérifier si le joueur souhaite aller à gauche ou à droite
+        if self.pressed.get(pygame.K_RIGHT):
+            self.player.move_right()
+        elif self.pressed.get(pygame.K_LEFT) and self.player.rect.x > 0:
+            self.player.move_left()
 
-    # Appliquer l'ensemble des images de mon groupe de projectiles
-    game.player.all_projectiles.draw(screen)
 
-    # Appliquer l'ensemble des images de mon groupe de monstres
-    game.all_monsters.draw(screen)
+    def check_collision(self, sprite, groupe):
+        return pygame.sprite.spritecollide(sprite, groupe, False, pygame.sprite.collide_mask)
 
-    # Vérifier si le joueur souhaite aller à gauche ou à droite
-    if game.pressed.get(pygame.K_RIGHT):
-        game.player.move_right()
-    elif game.pressed.get(pygame.K_LEFT) and game.player.rect.x > 0:
-        game.player.move_left()
+    def spawn_monster(self):
+        monster = Monster(self)
+        self.all_monsters.add(monster)
 
-    # Vérifier si le joueur souhaite sauter
-    if game.pressed.get(pygame.K_SPACE):
-        game.player.jump()  # Appelle la méthode jump pour faire sauter le joueur
 
-    print(game.player.rect.x)
 
-    # Mettre à jour le joueur (y compris la gestion du saut et de la gravité)
-    game.player.gravity_jump()
-
-    clock.tick(FPS)
-
-    # Mettre à jour l'écran
-    pygame.display.flip()
-
-    # Si le joueur ferme cette fenêtre
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
-            pygame.quit()
-            print("Fermeture du jeu")
-        # Détecter si un joueur enclenche une touche du clavier
-        elif event.type == pygame.KEYDOWN:
-            game.pressed[event.key] = True
-
-            # Détecter si la touche 'k' est enclenchée pour lancer notre projectile
-            if event.key == pygame.K_k:
-                game.player.launch_projectile()
-
-        elif event.type == pygame.KEYUP:
-            game.pressed[event.key] = False
