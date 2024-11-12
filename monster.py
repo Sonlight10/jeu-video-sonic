@@ -13,7 +13,7 @@ class Monster(animation.AnimateSprite):
         self.attack = 1
         self.rect = self.image.get_rect()
         self.rect.x = 1080 + random.randint(0,300)
-        self.rect.y = 570
+        self.rect.y = 595
         self.velocity = 1
         self.start_animation()
         
@@ -35,5 +35,4 @@ class Monster(animation.AnimateSprite):
         # si le monstre est en collision avec le joueur
         else:
             # Infliger des degats (au joueur)
-            self.game.player.damage(self.attack) 
-
+            self.game.player.damage(self.attack)
