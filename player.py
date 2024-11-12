@@ -16,9 +16,8 @@ class Player(animation.AnimateSprite):
         self.vertical_speed = 0  # Vitesse verticale
         self.all_projectiles = pygame.sprite.Group()
         self.rect = self.image.get_rect()
-        self.rect.x = 0
-        self.rect.y = 550
         self.game = game
+        self.ground_y = 550
 
     def damage(self, amount):
         if self.health - amount > amount:
